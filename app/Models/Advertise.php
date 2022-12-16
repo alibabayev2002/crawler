@@ -10,7 +10,7 @@ class Advertise extends Model
     use HasFactory;
 
     protected $fillable = [
-        'url', 'category', 'floor', 'area', 'document_type', 'repair', 'additional', 'description', 'phones','longitude','latitude','identifier'
+        'url', 'category', 'floor', 'area', 'document_type', 'repair', 'additional', 'description', 'phones','longitude','latitude','identifier','advertise'
     ];
 
     protected $casts = [

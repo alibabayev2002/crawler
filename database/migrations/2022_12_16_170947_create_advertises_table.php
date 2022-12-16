@@ -24,6 +24,8 @@ return new class extends Migration {
                 ->nullable();
             $table->string('floor')
                 ->nullable();
+            $table->string('address')
+                ->nullable();
             $table->string('area')
                 ->nullable();
             $table->string('document_type')
