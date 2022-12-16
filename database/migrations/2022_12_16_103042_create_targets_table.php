@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string('url');
             $table->enum('status', [Target::NOT_PARSED, Target::PARSED])
                 ->default(Target::NOT_PARSED);
-            $table->unique('url');
+            $table->unique(['url']);
             $table->timestamps();
         });
     }
