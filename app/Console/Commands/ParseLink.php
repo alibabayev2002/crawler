@@ -34,6 +34,6 @@ class ParseLink extends Command
         $crawler = new Crawler($binaCrawler);
         $progressBar = $this->output->createProgressBar();
 
-        $crawler->parseLinks('https://bina.az/alqi-satqi?page=2',$progressBar);
+        $crawler->parseLinks('https://bina.az/alqi-satqi?page=1',$progressBar);
     }
 }
