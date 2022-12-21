@@ -18,16 +18,24 @@ return new class extends Migration {
             $table->string('url');
             $table->string('identifier');
 
-            $table->string('name');
+            $table->text('name');
+
+            $table->string('username');
 
             $table->string('category')
                 ->nullable();
             $table->string('floor')
                 ->nullable();
+            $table->string('price')
+                ->nullable();
             $table->string('address')
                 ->nullable();
+
             $table->string('area')
                 ->nullable();
+            $table->string('land')
+                ->nullable();
+
             $table->string('document_type')
                 ->nullable();
             $table->string('repair')
@@ -39,13 +47,19 @@ return new class extends Migration {
             $table->string('latitude')
                 ->nullable();
 
+            $table->string('room_count')
+                ->nullable();
+
             $table->text('description');
 
             $table->json('additional');
             $table->json('phones');
+            $table->json('images');
 
             $table->unique('url');
             $table->unique('identifier');
+
+            $table->fullText(['name', 'description', 'address']);
 
 
             $table->timestamps();

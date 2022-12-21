@@ -1,0 +1,20 @@
+.breadcrumb {
+    display: flex;
+
+    .breadcrumb-item {
+        padding: 5px 10px;
+        display: flex;
+        align-items: center;
+        opacity: .4;
+
+        &.active {
+            opacity: 1;
+        }
+    }
+
+    span {
+        &:not(:where(.breadcrumb-item)) {
+            padding: 5px 0;
+        }
+    }
+}

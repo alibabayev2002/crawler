@@ -7,6 +7,9 @@ use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
 use App\Models\Target;
 use GuzzleHttp\Client;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BinaCrawlerAdapter extends CrawlerAdapter
 {
@@ -47,10 +50,30 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['identifier'] = $identifier[array_key_last($identifier)];
         $phoneApiUrl = $url . '/phones';
         $data['phones'] = json_decode(file_get_contents($phoneApiUrl), true)['phones'];
-        $data['price'] = (float)CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data;
+        $data['price'] = (float)str_replace(' ', '', CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data);
         $data['address'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'map_address')[0]->data);
-        $data['name'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'contacts')[0]->firstChild->data);
+        $data['username'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'contacts')[0]->firstChild->data);
+        $data['name'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'services-container')[0]->firstChild->data);
         $data['description'] = utf8_decode($domDocument->getElementsByTagName('article')[0]->firstChild->firstChild->data);
+        $data['images'] = [];
+        $thumbnails = CrawlerHelper::getClassNodes($finder, 'thumbnail', false);
+        $disk = Storage::disk('public');
+
+
+        foreach ($thumbnails as $thumbnail) {
+            $src = $thumbnail->firstChild->getAttribute('src');
+            $index = strpos($src, 'https://');
+            $href = substr($src, $index);
+            if ($href) {
+                $info = pathinfo($href);
+                $contents = file_get_contents($href);
+                $file = '/tmp/' . $info['basename'];
+                file_put_contents($file, $contents);
+                $image = new UploadedFile($file, $info['basename']);
+                $name = $disk->putFileAs('/advertises/b', $image, Str::slug($image->getClientOriginalName()) . '.' . $image->getClientOriginalExtension());
+                $data['images'][] = $name;
+            }
+        }
 
         $table = CrawlerHelper::getClassNodes($finder, 'param_info');
 
@@ -59,26 +82,40 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             'Kateqoriya' => 'category',
             'Mərtəbə' => 'floor',
             'Sahə' => 'area',
+            'Torpaq sahəsi' => 'land',
             'Çıxarış' => 'document_type',
             'Təmir' => 'repair',
+            'Otaq sayı' => 'room_count',
         ];
         $data['additional'] = [];
 
         foreach ($childNodes as $tr) {
             $key = utf8_decode($tr->firstChild->firstChild->data);
-            $value = utf8_decode($tr->childNodes[1]->firstChild->data);
+            $value = mb_strtolower(utf8_decode($tr->childNodes[1]->firstChild->data));
+            if ($key == 'Sahə' || $key == 'Torpaq sahəsi') {
+                $value = (float)$value;
+            }
+
             if (array_key_exists($key, $attributes)) {
                 $data[$attributes[$key]] = $value;
             } else {
                 $data['additional'][] = ['key' => $key, 'value' => $value];
             }
         }
+
         $map = $domDocument->getElementById('item_map');
         $data['longitude'] = $map->getAttribute('data-lng');
         $data['latitude'] = $map->getAttribute('data-lat');
         $data['url'] = $url;
 
+        foreach ($data as $key => $item) {
+            if (is_array($item)) {
+                $data[$key] = json_encode($item);
+            }
+        }
+
         Advertise::query()
-            ->create($data);
+            ->upsert([$data], ['url']);
+
     }
 }

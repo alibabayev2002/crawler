@@ -60,12 +60,14 @@ class Crawler
             foreach ($targets as $target) {
                 $url = $target->url;
                 try {
+                    $url = "https://bina.az/items/3161201";
                     $res = file_get_contents($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
                     $domDocument->loadHTML($res);
                     $finder = new \DomXPath($domDocument);
                     $nodes = CrawlerHelper::getClassNodes($finder, 'ownership');
                     $ownership = utf8_decode(isset($nodes[0]) ? $nodes[0]->data : '');
+
                     if ($ownership === 'mülkiyyətçi') {
                         $this->adapter->parseAdvertise($finder, $domDocument, $url);
                         $target->update(['status' => Target::PARSED]);
@@ -73,8 +75,10 @@ class Crawler
                         $target->delete();
                     }
                 }catch (Exception $exception){
+                    dd($exception->getMessage());
 //                    echo $exception->getMessage()
                 }
+                dd('sa');
             }
         };
         $this->fixInternalErrors($callback);

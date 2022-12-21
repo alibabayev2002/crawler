@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\AdvertiseController;
+use App\Http\Controllers\DashboardController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,9 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-
-
-
-
-});
+Route::redirect('/', '/login');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/advertises/{advertise}', [AdvertiseController::class, 'show'])->name('advertises.show');
+Route::delete('/advertises/{advertise}', [AdvertiseController::class, 'destroy'])->name('advertises.destroy');

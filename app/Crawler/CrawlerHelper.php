@@ -30,10 +30,14 @@ class CrawlerHelper
         return str_replace($queryString, http_build_query($queryArray), $url);
     }
 
-    public static function getClassNodes($finder, $class)
+    public static function getClassNodes($finder, $class, $childNodes = true)
     {
-        return $finder->query("//*[contains(@class, '$class')]")[0]?->childNodes;
+        if ($childNodes)
+            return $finder->query("//*[contains(@class, '$class')]")[0]?->childNodes;
+        else
+            return $finder->query("//*[contains(@class, '$class')]");
     }
+
 
     public static function getIdNode($finder, $id)
     {
