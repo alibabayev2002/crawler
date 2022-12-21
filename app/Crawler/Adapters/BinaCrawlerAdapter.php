@@ -61,9 +61,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
 
         foreach ($thumbnails as $thumbnail) {
-            $src = $thumbnail->firstChild->getAttribute('src');
-            $index = strpos($src, 'https://');
-            $href = substr($src, $index);
+            $href = $thumbnail->getAttribute('data-mfp-src');
             if ($href) {
                 $info = pathinfo($href);
                 $contents = file_get_contents($href);
@@ -116,6 +114,8 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         Advertise::query()
             ->upsert([$data], ['url']);
+
+        dd($data);
 
     }
 }

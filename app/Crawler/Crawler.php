@@ -60,7 +60,6 @@ class Crawler
             foreach ($targets as $target) {
                 $url = $target->url;
                 try {
-                    $url = "https://bina.az/items/3161201";
                     $res = file_get_contents($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
                     $domDocument->loadHTML($res);
