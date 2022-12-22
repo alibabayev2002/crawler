@@ -72,7 +72,7 @@ class Crawler
 
             foreach ($targets as $target) {
                 $url = str_replace('.html','',$target->url);
-//                try {
+                try {
                     $res = CrawlerHelper::getHtml($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
                     $domDocument->loadHTML($res);
@@ -88,10 +88,10 @@ class Crawler
                         echo "Deleted: $url \n";
                         $target->delete();
                     }
-//                } catch (Exception $exception) {
+                } catch (Exception $exception) {
 ////                    $target->update(['status' => Target::NOT_PARSED]);
-//                    dump($exception->getMessage(), $exception->getFile(), $exception->getLine(), $url);
-//                }
+                    echo "Error: $url \n";
+                }
             }
         };
         $this->fixInternalErrors($callback);
