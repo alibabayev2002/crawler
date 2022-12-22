@@ -65,7 +65,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
     public function getMaxPageCount($finder): float
     {
-        return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 6);
+        return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 24);
     }
 
     public function parseAdvertise($finder, $domDocument, $url): void
