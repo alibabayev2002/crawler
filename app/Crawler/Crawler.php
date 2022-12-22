@@ -28,7 +28,11 @@ class Crawler
     public function parseLinks($url, $progressBar): void
     {
         $callback = function () use ($url, $progressBar) {
-            $res = file_get_contents($url);
+            $browser = self::getBrowser();
+            $page = $browser->createPage();
+            $page->navigate($url)->waitForNavigation();
+            $res = $page->getHtml();
+            $page->close();
             $domDocument = new \DOMDocument('1.0', 'UTF-8');
             $domDocument->loadHTML($res);
             $finder = new \DomXPath($domDocument);
