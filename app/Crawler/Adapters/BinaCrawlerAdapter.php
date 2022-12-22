@@ -101,6 +101,10 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             }
         }
 
+        if (!(isset($data['room_count']) && $data['room_count'])) {
+            return;
+        }
+
         $map = $domDocument->getElementById('item_map');
         $data['longitude'] = $map->getAttribute('data-lng');
         $data['latitude'] = $map->getAttribute('data-lat');
