@@ -76,20 +76,28 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['identifier'] = $identifier[array_key_last($identifier)];
         $phoneApiUrl = $url . '/phones';
 
-        $browser = Crawler::getBrowser();
-        $page = $browser->createPage();
-        $page->navigate($phoneApiUrl)->waitForNavigation();
         $domDocument2 = new \DOMDocument('1.0', 'UTF-8');
-        $domDocument2->loadHTML($page->getHtml());
-        $page->close();
-        $browser->close();
+        $phoneApiHtml = CrawlerHelper::getHtml($phoneApiUrl);
+        $domDocument2->loadHTML($phoneApiHtml);
 
-        $data['phones'] = json_decode($domDocument2->getElementsByTagName('pre')[0]->firstChild->data, true)['phones'];
+        $json = null;
+
+        if(app()->environment('production')){
+            $json = $domDocument2->getElementsByTagName('pre')[0]->firstChild->data;
+        }else{
+            $json = $phoneApiHtml;
+        }
+
+        $data['phones'] = json_decode($json, true)['phones'];
         $data['price'] = (float)str_replace(' ', '', CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data);
         $data['address'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'map_address')[0]->data);
         $data['username'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'contacts')[0]->firstChild->data);
         $data['name'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'services-container')[0]->firstChild->data);
-        $data['description'] = utf8_decode($domDocument->getElementsByTagName('article')[0]->firstChild->firstChild->data);
+        $description = '';
+        foreach ($domDocument->getElementsByTagName('article')[0]->childNodes as $pTag){
+            $description.= ' ' . $pTag->firstChild?->data;
+        }
+        $data['description'] = utf8_decode($description);
         $data['images'] = [];
         $thumbnails = CrawlerHelper::getClassNodes($finder, 'thumbnail', false);
         $disk = Storage::disk('digitalocean');
@@ -107,7 +115,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             }
         }
 
-        $table = CrawlerHelper::getClassNodes($finder, 'param_info');
+        $table = CrawlerHelper::getClassNodes($finder, 'param_info',false);
 
         $childNodes = $table[0]->childNodes[0]->childNodes;
         $attributes = [

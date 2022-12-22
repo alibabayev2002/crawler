@@ -28,14 +28,8 @@ class Crawler
     public function parseLinks($url, $progressBar): void
     {
         $callback = function () use ($url, $progressBar) {
-            $browser = self::getBrowser();
-            $page = $browser->createPage();
-            $page->navigate($url)->waitForNavigation();
-            $res = $page->getHtml();
-            $page->close();
-            $browser->close();
             $domDocument = new \DOMDocument('1.0', 'UTF-8');
-            $domDocument->loadHTML($res);
+            $domDocument->loadHTML(CrawlerHelper::getHtml($url));
             $finder = new \DomXPath($domDocument);
 
             $currentPage = CrawlerHelper::getPage($url);
@@ -43,12 +37,7 @@ class Crawler
             $progressBar->start($maxPage);
             while ($currentPage < $maxPage) {
                 $nextPageUrl = CrawlerHelper::getUrl($url, $currentPage++);
-                $browser = self::getBrowser();
-                $page = $browser->createPage();
-                $page->navigate($nextPageUrl)->waitForNavigation();
-                $res = $page->getHtml();
-                $page->close();
-                $browser->close();
+                $res = CrawlerHelper::getHtml($nextPageUrl);
                 $domDocument = new \DOMDocument('1.0', 'UTF-8');
                 $domDocument->loadHTML($res);
                 $finder = new \DomXPath($domDocument);
@@ -73,21 +62,17 @@ class Crawler
     {
         $callback = function () {
             $targets = Target::query()
-                ->where('status', Target::NOT_PARSED)
+                ->whereNot('status', Target::PARSED)
                 ->take(10000)
                 ->get();
 
 
-            $browser = self::getBrowser();
 
 
             foreach ($targets as $target) {
                 $url = $target->url;
-                try {
-                    $page = $browser->createPage();
-                    $page->navigate($url)->waitForNavigation();
-                    $res = $page->getHtml();
-                    $page->close();
+//                try {
+                    $res = CrawlerHelper::getHtml($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
                     $domDocument->loadHTML($res);
                     $finder = new \DomXPath($domDocument);
@@ -95,19 +80,17 @@ class Crawler
                     $ownership = utf8_decode(isset($nodes[0]) ? $nodes[0]->data : '');
                     if ($ownership === 'mülkiyyətçi') {
                         echo "Saved: $url \n";
-//                        $target->update(['status' => Target::PARSING]);
+                        $target->update(['status' => Target::PARSING]);
                         $this->adapter->parseAdvertise($finder, $domDocument, $url);
                         $target->update(['status' => Target::PARSED]);
                     } else {
                         echo "Deleted: $url \n";
                         $target->delete();
                     }
-                } catch (Exception $exception) {
-//                    $target->update(['status' => Target::NOT_PARSED]);
-                    dump($exception->getMessage(), $exception->getFile(), $exception->getLine(), $url);
-                } finally {
-                    $browser->close();
-                }
+//                } catch (Exception $exception) {
+////                    $target->update(['status' => Target::NOT_PARSED]);
+//                    dump($exception->getMessage(), $exception->getFile(), $exception->getLine(), $url);
+//                }
             }
         };
         $this->fixInternalErrors($callback);

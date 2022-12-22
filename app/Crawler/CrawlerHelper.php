@@ -44,5 +44,21 @@ class CrawlerHelper
         return $finder->query("//*[contains(@id, '$id')]")[0]?->firstChild;
     }
 
+
+    public static function getHtml($url)
+    {
+        if (app()->environment('production')) {
+            $browser = Crawler::getBrowser();
+            $page = $browser->createPage();
+            $page->navigate($url)->waitForNavigation();
+            $html = $page->getHtml();
+            $page->close();
+            $browser->close();
+            return $html;
+        }
+
+        return file_get_contents($url);
+    }
+
 }
 
