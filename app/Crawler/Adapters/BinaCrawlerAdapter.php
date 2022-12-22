@@ -31,7 +31,17 @@ class BinaCrawlerAdapter extends CrawlerAdapter
     {
         $linkNodes = CrawlerHelper::getClassNodes($finder, 'items_list');
 
+        $check = true;
+        foreach ($linkNodes[0]->childNodes[2]->childNodes as $div) {
+            if ($div->getAttribute('class') == "products-label")
+                $check = false;
+        }
+
+        if (!$check)
+            return;
+
         $links = [];
+
         foreach ($linkNodes as $node) {
             $links[] = ['url' => 'https://bina.az' . $node->getElementsByTagName('a')[0]?->attributes[2]->value];
         }
