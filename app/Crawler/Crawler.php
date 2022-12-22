@@ -74,7 +74,7 @@ class Crawler
                         $target->delete();
                     }
                 }catch (Exception $exception){
-                    dd($exception->getMessage());
+//                    dd($exception->getMessage());
 //                    echo $exception->getMessage()
                 }
             }
