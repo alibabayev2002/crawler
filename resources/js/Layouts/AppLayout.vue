@@ -30,9 +30,11 @@ const sidebar = ref(false);
         </div>
 
         <div class="sidebar-items">
-
-            <Link :href="route('dashboard')" class="sidebar-item active">
+            <Link :href="route('dashboard')" class="sidebar-item" :class="{'active':route().current('dashboard')}">
                 Əmlaklar
+            </Link>
+            <Link :href="route('favorites')" class="sidebar-item" :class="{'active':route().current('favorites')}">
+                Yadda saxlanılmış əmlaklar
             </Link>
             <Link method="post" :href="route('logout')" class="sidebar-item">
                 Çıxış

@@ -77,7 +77,6 @@ class Crawler
                     dd($exception->getMessage());
 //                    echo $exception->getMessage()
                 }
-                dd('sa');
             }
         };
         $this->fixInternalErrors($callback);

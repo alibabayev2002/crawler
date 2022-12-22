@@ -18,6 +18,13 @@ use Inertia\Inertia;
 */
 
 Route::redirect('/', '/login');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/advertises/{advertise}', [AdvertiseController::class, 'show'])->name('advertises.show');
-Route::delete('/advertises/{advertise}', [AdvertiseController::class, 'destroy'])->name('advertises.destroy');
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/advertises/{advertise}', [AdvertiseController::class, 'show'])->name('advertises.show');
+    Route::delete('/advertises/{advertise}', [AdvertiseController::class, 'destroy'])->name('advertises.destroy');
+    Route::post('/advertises/{advertise}/favorite', [AdvertiseController::class, 'favorite'])->name('advertises.favorite');
+
+    Route::get('/favorites', [DashboardController::class, 'favorites'])->name('favorites');
+});

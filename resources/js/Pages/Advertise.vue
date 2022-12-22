@@ -4,6 +4,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import 'vue3-carousel/dist/carousel.css'
 import {Carousel, Slide, Pagination, Navigation} from 'vue3-carousel'
+import {ref} from "vue";
 
 const props = defineProps({
     entity: {
@@ -18,9 +19,21 @@ const deleteAdvertise = () => {
     }
 }
 
+const scaleImageSrc = ref();
+
+const scaleImage = (image) => {
+    scaleImageSrc.value = image;
+}
+
 </script>
 <template>
     <AppLayout title="Advertise">
+        <div v-if="scaleImageSrc" class="scale-image-modal">
+            <button @click.prevent="scaleImageSrc = null" class="scale-image-modal-close">
+                <img src="/images/close.png" alt="">
+            </button>
+            <img :src="scaleImageSrc" alt="">
+        </div>
         <div class="advertise">
             <div class="breadcrumb">
                 <Link :href="route('dashboard')" class="breadcrumb-item active" href="">
@@ -31,9 +44,11 @@ const deleteAdvertise = () => {
                     {{ entity.id }}
                 </span>
             </div>
-            <carousel :items-to-show="1.5">
+            <carousel :items-to-show="1" :touchDrag="true">
                 <slide v-for="(image,key) in entity.images" :key="key">
-                    <img :src="image" width="500" alt="">
+                    <div @click.prevent="scaleImage(image)" style="width: 100%;height: 500px;">
+                        <img style="object-fit: cover;width: 100%;height: 100%" :src="image" alt="">
+                    </div>
                 </slide>
 
                 <template #addons>
@@ -58,6 +73,30 @@ const deleteAdvertise = () => {
                     </td>
                     <td>
                         {{ entity.document_type }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Təmir
+                    </td>
+                    <td>
+                        {{ entity.repair }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Sahə
+                    </td>
+                    <td>
+                        {{ entity.area }}
+                    </td>
+                </tr>
+                <tr v-if="entity.land">
+                    <td>
+                        Torpaq sahəsi
+                    </td>
+                    <td>
+                        {{ entity.land }}
                     </td>
                 </tr>
                 <tr>
@@ -148,7 +187,17 @@ const deleteAdvertise = () => {
                 Xəritədə aç
             </a>
 
+
             <br>
+            <br>
+            <Link :preserveScroll="true" method="post" :href="route('advertises.favorite',entity.id)">
+                <template v-if="entity.is_favorite">
+                    Yaddaşdan sil
+                </template>
+                <template v-else>
+                    Yadda saxla
+                </template>
+            </Link>
             <br>
 
             <a @click.prevent="deleteAdvertise" :href="route('advertises.destroy',entity.id)"
