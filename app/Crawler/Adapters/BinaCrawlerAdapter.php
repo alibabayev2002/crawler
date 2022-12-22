@@ -6,7 +6,10 @@ use App\Crawler\CrawlerAdapter;
 use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
 use App\Models\Target;
+use Exception;
 use GuzzleHttp\Client;
+use HeadlessChromium\Browser\ProcessAwareBrowser;
+use HeadlessChromium\BrowserFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,14 +45,24 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 6);
     }
 
-    public function parseAdvertise($finder, $domDocument, $url): void
+    public function parseAdvertise($finder, $domDocument, $url, $factory): void
     {
         $data = [];
 
         $identifier = explode('/', $url);
         $data['identifier'] = $identifier[array_key_last($identifier)];
         $phoneApiUrl = $url . '/phones';
-        $data['phones'] = json_decode(file_get_contents($phoneApiUrl), true)['phones'];
+        $browser = $factory->createBrowser([
+            'keepAlive' => true,
+            'headless' => true,
+            'enableImages' => false
+        ]);
+        $page = $browser->createPage();
+        $page->navigate($phoneApiUrl)->waitForNavigation();
+        $domDocument2 = new \DOMDocument('1.0', 'UTF-8');
+        $domDocument2->loadHTML($page->getHtml());
+        $page->close();
+        $data['phones'] = json_decode($domDocument2->getElementsByTagName('pre')[0]->firstChild->data, true)['phones'];
         $data['price'] = (float)str_replace(' ', '', CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data);
         $data['address'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'map_address')[0]->data);
         $data['username'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'contacts')[0]->firstChild->data);
@@ -58,7 +71,6 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['images'] = [];
         $thumbnails = CrawlerHelper::getClassNodes($finder, 'thumbnail', false);
         $disk = Storage::disk('digitalocean');
-
 
         foreach ($thumbnails as $thumbnail) {
             $href = $thumbnail->getAttribute('data-mfp-src');
@@ -75,7 +87,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         $table = CrawlerHelper::getClassNodes($finder, 'param_info');
 
-        $childNodes = $table[0]->childNodes;
+        $childNodes = $table[0]->childNodes[0]->childNodes;
         $attributes = [
             'Kateqoriya' => 'category',
             'Mərtəbə' => 'floor',

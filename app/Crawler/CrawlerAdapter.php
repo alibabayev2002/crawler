@@ -2,6 +2,8 @@
 
 namespace App\Crawler;
 
+use HeadlessChromium\BrowserFactory;
+
 abstract class CrawlerAdapter
 {
     /**
@@ -9,6 +11,6 @@ abstract class CrawlerAdapter
      */
     abstract public function parseLinks($url): void;
 
-    abstract public function parseAdvertise($finder, $domDocument, $url): void;
+    abstract public function parseAdvertise($finder, $domDocument, $url, $factory): void;
 
 }
