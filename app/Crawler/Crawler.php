@@ -63,6 +63,7 @@ class Crawler
         $callback = function () {
             $targets = Target::query()
                 ->whereNot('status', Target::PARSED)
+                ->orderBy('id')
                 ->take(10000)
                 ->get();
 
@@ -70,7 +71,7 @@ class Crawler
 
 
             foreach ($targets as $target) {
-                $url = $target->url;
+                $url = str_replace('.html','',$target->url);
 //                try {
                     $res = CrawlerHelper::getHtml($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
