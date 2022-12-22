@@ -18,6 +18,9 @@
         "laravel/tinker": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.10",
         "poor-plebs/guzzle-retry-after-middleware": "^3.0",
+        "symfony/browser-kit": "^6.2",
+        "symfony/css-selector": "^6.2",
+        "symfony/http-client": "^6.2",
         "tightenco/ziggy": "^1.0"
     },
     "require-dev": {

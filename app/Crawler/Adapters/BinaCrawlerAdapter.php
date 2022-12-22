@@ -2,18 +2,15 @@
 
 namespace App\Crawler\Adapters;
 
-use App\Crawler\Crawler;
 use App\Crawler\CrawlerAdapter;
 use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
 use App\Models\Target;
 use Exception;
-use GuzzleHttp\Client;
-use HeadlessChromium\Browser\ProcessAwareBrowser;
-use HeadlessChromium\BrowserFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\BrowserKit\HttpBrowser;
 
 class BinaCrawlerAdapter extends CrawlerAdapter
 {
@@ -36,9 +33,9 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         foreach ($linkNodes as $node) {
             $check = true;
-            try{
+            try {
                 $href = @$node->getElementsByTagName('a')[0]?->getAttribute('href');
-            }catch (Exception $exception){
+            } catch (Exception $exception) {
                 continue;
             }
             if (!$href) {
@@ -65,10 +62,10 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
     public function getMaxPageCount($finder): float
     {
-        return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 6);
+        return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 24);
     }
 
-    public function parseAdvertise($finder, $domDocument, $url): void
+    public function parseAdvertise($finder, $domDocument, $url, HttpBrowser $browser): void
     {
         $data = [];
 
@@ -76,13 +73,8 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['identifier'] = $identifier[array_key_last($identifier)];
         $phoneApiUrl = $url . '/phones';
 
-        $browser = Crawler::getBrowser();
-        $page = $browser->createPage();
-        $page->navigate($phoneApiUrl)->waitForNavigation();
         $domDocument2 = new \DOMDocument('1.0', 'UTF-8');
-        $domDocument2->loadHTML($page->getHtml());
-        $page->close();
-        $browser->close();
+        $domDocument2->loadHTML($browser->request('GET', $phoneApiUrl)->html());
 
         $data['phones'] = json_decode($domDocument2->getElementsByTagName('pre')[0]->firstChild->data, true)['phones'];
         $data['price'] = (float)str_replace(' ', '', CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data);
