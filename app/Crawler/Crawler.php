@@ -5,28 +5,14 @@ namespace App\Crawler;
 use App\Models\Target;
 use Exception;
 use HeadlessChromium\BrowserFactory;
-use Symfony\Component\BrowserKit\Cookie;
-use Symfony\Component\BrowserKit\CookieJar;
-use Symfony\Component\BrowserKit\HttpBrowser;
-use Symfony\Component\HttpClient\HttpClient;
 
 class Crawler
 {
     private CrawlerAdapter $adapter;
-    private HttpBrowser $browser;
 
     public function __construct(CrawlerAdapter $adapter)
     {
         $this->adapter = $adapter;
-
-        $domain = 'bina.az';
-        $jar = new CookieJar();
-        $jar->set(new Cookie('_name_session', 'value', null, null, $domain));
-        $client = HttpClient::create([
-            'timeout' => 900,
-            'verify_peer' => false
-        ]);
-        $this->browser = new HttpBrowser($client, null, $jar);
     }
 
     public function fixInternalErrors($callback)
@@ -42,8 +28,12 @@ class Crawler
     public function parseLinks($url, $progressBar): void
     {
         $callback = function () use ($url, $progressBar) {
-            $crawler = $this->browser->request('GET', $url);
-            $res = $crawler->html();
+            $browser = self::getBrowser();
+            $page = $browser->createPage();
+            $page->navigate($url)->waitForNavigation();
+            $res = $page->getHtml();
+            $page->close();
+            $browser->close();
             $domDocument = new \DOMDocument('1.0', 'UTF-8');
             $domDocument->loadHTML($res);
             $finder = new \DomXPath($domDocument);
@@ -53,7 +43,12 @@ class Crawler
             $progressBar->start($maxPage);
             while ($currentPage < $maxPage) {
                 $nextPageUrl = CrawlerHelper::getUrl($url, $currentPage++);
-                $res = $this->browser->request('GET', $nextPageUrl)->html();
+                $browser = self::getBrowser();
+                $page = $browser->createPage();
+                $page->navigate($nextPageUrl)->waitForNavigation();
+                $res = $page->getHtml();
+                $page->close();
+                $browser->close();
                 $domDocument = new \DOMDocument('1.0', 'UTF-8');
                 $domDocument->loadHTML($res);
                 $finder = new \DomXPath($domDocument);
@@ -89,7 +84,10 @@ class Crawler
             foreach ($targets as $target) {
                 $url = $target->url;
                 try {
-                    $res = $this->browser->request('GET', $url)->html();
+                    $page = $browser->createPage();
+                    $page->navigate($url)->waitForNavigation();
+                    $res = $page->getHtml();
+                    $page->close();
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
                     $domDocument->loadHTML($res);
                     $finder = new \DomXPath($domDocument);
@@ -98,7 +96,7 @@ class Crawler
                     if ($ownership === 'mülkiyyətçi') {
                         echo "Saved: $url \n";
 //                        $target->update(['status' => Target::PARSING]);
-                        $this->adapter->parseAdvertise($finder, $domDocument, $url, $this->browser);
+                        $this->adapter->parseAdvertise($finder, $domDocument, $url);
                         $target->update(['status' => Target::PARSED]);
                     } else {
                         echo "Deleted: $url \n";
