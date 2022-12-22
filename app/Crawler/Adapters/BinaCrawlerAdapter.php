@@ -31,20 +31,32 @@ class BinaCrawlerAdapter extends CrawlerAdapter
     {
         $linkNodes = CrawlerHelper::getClassNodes($finder, 'items_list');
 
-        $check = true;
-        foreach ($linkNodes[0]->childNodes[2]->childNodes as $div) {
-            if ($div->getAttribute('class') == "products-label")
-                $check = false;
-        }
-
-        if (!$check)
-            return;
 
         $links = [];
 
         foreach ($linkNodes as $node) {
-            $links[] = ['url' => 'https://bina.az' . $node->getElementsByTagName('a')[0]?->attributes[2]->value];
+            $check = true;
+            try{
+                $href = @$node->getElementsByTagName('a')[0]?->getAttribute('href');
+            }catch (Exception $exception){
+                continue;
+            }
+            if (!$href) {
+                continue;
+            }
+
+
+            foreach ($node->childNodes[2]->childNodes as $div) {
+                if ($div->getAttribute('class') == "products-label")
+                    $check = false;
+            }
+
+            if (!$check)
+                continue;
+
+            $links[] = ['url' => 'https://bina.az' . $href];
         }
+
 
         Target::query()
             ->upsert($links, ['url']);
@@ -70,6 +82,8 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $domDocument2 = new \DOMDocument('1.0', 'UTF-8');
         $domDocument2->loadHTML($page->getHtml());
         $page->close();
+        $browser->close();
+
         $data['phones'] = json_decode($domDocument2->getElementsByTagName('pre')[0]->firstChild->data, true)['phones'];
         $data['price'] = (float)str_replace(' ', '', CrawlerHelper::getClassNodes($finder, 'price-val')[0]->data);
         $data['address'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'map_address')[0]->data);

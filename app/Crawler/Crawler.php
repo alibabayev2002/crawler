@@ -33,6 +33,7 @@ class Crawler
             $page->navigate($url)->waitForNavigation();
             $res = $page->getHtml();
             $page->close();
+            $browser->close();
             $domDocument = new \DOMDocument('1.0', 'UTF-8');
             $domDocument->loadHTML($res);
             $finder = new \DomXPath($domDocument);
@@ -42,7 +43,12 @@ class Crawler
             $progressBar->start($maxPage);
             while ($currentPage < $maxPage) {
                 $nextPageUrl = CrawlerHelper::getUrl($url, $currentPage++);
-                $res = file_get_contents($nextPageUrl);
+                $browser = self::getBrowser();
+                $page = $browser->createPage();
+                $page->navigate($nextPageUrl)->waitForNavigation();
+                $res = $page->getHtml();
+                $page->close();
+                $browser->close();
                 $domDocument = new \DOMDocument('1.0', 'UTF-8');
                 $domDocument->loadHTML($res);
                 $finder = new \DomXPath($domDocument);
@@ -56,24 +62,11 @@ class Crawler
 
     static function getBrowser()
     {
-        $socketFile = '/tmp/chrome-php-demo-socket';
-        try {
-            $socket = @file_get_contents($socketFile);
-            $browser = BrowserFactory::connectToBrowser($socket);
-        } catch (Exception $e) {
-            // The browser was probably closed, start it again
-            $factory = new BrowserFactory('chromium-browser');
-            $browser = $factory->createBrowser([
-                'keepAlive' => true,
-                'headless' => true,
-                'enableImages' => false
-            ]);
-
-            // save the uri to be able to connect again to browser
-            \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
-        }
-
-        return $browser;
+        $factory = new BrowserFactory('chromium-browser');
+        return $factory->createBrowser([
+            'headless' => true,
+            'enableImages' => false
+        ]);
     }
 
     public function parseAdvertises()
@@ -112,6 +105,8 @@ class Crawler
                 } catch (Exception $exception) {
 //                    $target->update(['status' => Target::NOT_PARSED]);
                     dump($exception->getMessage(), $exception->getFile(), $exception->getLine(), $url);
+                } finally {
+                    $browser->close();
                 }
             }
         };
