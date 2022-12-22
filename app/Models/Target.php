@@ -15,4 +15,5 @@ class Target extends Model
 
     public const PARSED = 'parsed';
     public const NOT_PARSED = 'not_parsed';
+    public const PARSING = 'parsing';
 }

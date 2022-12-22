@@ -2,6 +2,7 @@
 
 namespace App\Crawler\Adapters;
 
+use App\Crawler\Crawler;
 use App\Crawler\CrawlerAdapter;
 use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
@@ -45,18 +46,15 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         return ceil((int)CrawlerHelper::getClassNodes($finder, 'js-search-filters-items-count')[0]->data / 6);
     }
 
-    public function parseAdvertise($finder, $domDocument, $url, $factory): void
+    public function parseAdvertise($finder, $domDocument, $url): void
     {
         $data = [];
 
         $identifier = explode('/', $url);
         $data['identifier'] = $identifier[array_key_last($identifier)];
         $phoneApiUrl = $url . '/phones';
-        $browser = $factory->createBrowser([
-            'keepAlive' => true,
-            'headless' => true,
-            'enableImages' => false
-        ]);
+
+        $browser = Crawler::getBrowser();
         $page = $browser->createPage();
         $page->navigate($phoneApiUrl)->waitForNavigation();
         $domDocument2 = new \DOMDocument('1.0', 'UTF-8');

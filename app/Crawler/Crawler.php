@@ -4,12 +4,7 @@ namespace App\Crawler;
 
 use App\Models\Target;
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
 use HeadlessChromium\BrowserFactory;
-use HeadlessChromium\Exception\BrowserConnectionFailed;
-use Illuminate\Support\Facades\Cache;
-use PoorPlebs\GuzzleRetryAfterMiddleware\RetryAfterMiddleware;
 
 class Crawler
 {
@@ -55,6 +50,28 @@ class Crawler
         $this->fixInternalErrors($callback);
     }
 
+    static function getBrowser()
+    {
+        $socketFile = '/tmp/chrome-php-demo-socket';
+        try {
+            $socket = @file_get_contents($socketFile);
+            $browser = BrowserFactory::connectToBrowser($socket);
+        } catch (Exception $e) {
+            // The browser was probably closed, start it again
+            $factory = new BrowserFactory('chromium-browser');
+            $browser = $factory->createBrowser([
+                'keepAlive' => true,
+                'headless' => true,
+                'enableImages' => false
+            ]);
+
+            // save the uri to be able to connect again to browser
+            \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
+        }
+
+        return $browser;
+    }
+
     public function parseAdvertises()
     {
         $callback = function () {
@@ -64,28 +81,7 @@ class Crawler
                 ->get();
 
 
-            $socketFile = '/tmp/chrome-php-demo-socket';
-            try {
-                $socket = @file_get_contents($socketFile);
-                $browser = BrowserFactory::connectToBrowser($socket);
-            } catch (Exception $e) {
-                // The browser was probably closed, start it again
-                $factory = new BrowserFactory('chromium-browser');
-                $browser = $factory->createBrowser([
-                    'keepAlive' => true,
-                    'headless' => true,
-                    'enableImages' => false
-                ]);
-
-                // save the uri to be able to connect again to browser
-                \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
-                $socket = file_get_contents($socketFile);
-            }
-
-//            $browserFactory = new BrowserFactory();
-//
-//
-//            $browser = $browserFactory->createBrowser(['headless' => true, 'enableImages' => false]);
+            $browser = self::getBrowser();
 
 
             foreach ($targets as $target) {
@@ -101,13 +97,16 @@ class Crawler
                     $nodes = CrawlerHelper::getClassNodes($finder, 'ownership');
                     $ownership = utf8_decode(isset($nodes[0]) ? $nodes[0]->data : '');
                     if ($ownership === 'mülkiyyətçi') {
-                        $this->adapter->parseAdvertise($finder, $domDocument, $url, $factory);
+                        echo "Saved: $url \n";
+//                        $target->update(['status' => Target::PARSING]);
+                        $this->adapter->parseAdvertise($finder, $domDocument, $url);
                         $target->update(['status' => Target::PARSED]);
                     } else {
-                        dump($url);
+                        echo "Deleted: $url \n";
                         $target->delete();
                     }
                 } catch (Exception $exception) {
+//                    $target->update(['status' => Target::NOT_PARSED]);
                     dump($exception->getMessage(), $exception->getFile(), $exception->getLine(), $url);
                 }
             }
