@@ -32,7 +32,7 @@ class Advertise extends Model
 
         if ($images)
             foreach ($images as $image) {
-                $returnArray[] = asset(Storage::url($image));
+                $returnArray[] = asset(Storage::disk('digitalocean')->url($image));
             }
 
         return $returnArray;
