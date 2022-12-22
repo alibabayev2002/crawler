@@ -20,7 +20,6 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
 
         $schedule->call(function () {
-            Log::info('salam');
 //            Artisan::command('parse:links:bina');
 //
 //            Artisan::command('parse:advertises:bina');

@@ -57,7 +57,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['description'] = utf8_decode($domDocument->getElementsByTagName('article')[0]->firstChild->firstChild->data);
         $data['images'] = [];
         $thumbnails = CrawlerHelper::getClassNodes($finder, 'thumbnail', false);
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('digitalocean');
 
 
         foreach ($thumbnails as $thumbnail) {
@@ -114,8 +114,6 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         Advertise::query()
             ->upsert([$data], ['url']);
-
-        dd($data);
 
     }
 }
