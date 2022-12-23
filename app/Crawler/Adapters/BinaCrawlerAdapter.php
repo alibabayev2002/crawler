@@ -115,7 +115,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             }
         }
 
-        $table = CrawlerHelper::getClassNodes($finder, 'param_info',false);
+        $table = CrawlerHelper::getClassNodes($finder, 'param_info',app()->environment('production'));
 
         $childNodes = $table[0]->childNodes[0]->childNodes;
         $attributes = [
