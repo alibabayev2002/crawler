@@ -58,14 +58,20 @@ class Crawler
         ]);
     }
 
-    public function parseAdvertises()
+    public function parseAdvertises($step)
     {
-        $callback = function () {
+        $callback = function () use($step){
+            $targetsCount = Target::query()
+                ->whereNot('status', Target::PARSED)->count();
+
+
+
             $targets = Target::query()
                 ->whereNot('status', Target::PARSED)
-                ->orderBy('id')
+                ->orderByDesc('id')
                 ->take(10000)
-                ->get();
+                ->paginate((int)ceil($targetsCount / 4),page:$step);
+
 
 
 

@@ -13,7 +13,7 @@ class ParseAdvertise extends Command
      *
      * @var string
      */
-    protected $signature = 'parse:advertises:bina';
+    protected $signature = 'parse:advertises:bina {step=1}';
 
     /**
      * The console command description.
@@ -32,9 +32,10 @@ class ParseAdvertise extends Command
         $binaCrawler = new BinaCrawlerAdapter();
 
         $crawler = new Crawler($binaCrawler);
+
 //        $progressBar = $this->output->createProgressBar();
 
-        $crawler->parseAdvertises();
+        $crawler->parseAdvertises((int)$this->argument('step'));
 
     }
 }
