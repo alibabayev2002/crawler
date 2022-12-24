@@ -51,33 +51,44 @@ class Crawler
 
     static function getBrowser()
     {
-        $factory = new BrowserFactory('chromium-browser');
-        return $factory->createBrowser([
-            'headless' => true,
-            'enableImages' => false
-        ]);
+        $socketFile = '/tmp/chrome-php-demo-socket';
+        try {
+            $socket = @file_get_contents($socketFile);
+            $browser = BrowserFactory::connectToBrowser($socket);
+            echo "connection \n";
+        } catch (Exception $e) {
+            // The browser was probably closed, start it again
+            $factory = new BrowserFactory('chromium-browser');
+            $browser = $factory->createBrowser([
+                'keepAlive' => true,
+                'headless' => true,
+                'enableImages' => false
+            ]);
+
+            echo "creating \n";
+
+            // save the uri to be able to connect again to browser
+            \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
+        }
+
+        return $browser;
     }
 
     public function parseAdvertises($step)
     {
-        $callback = function () use($step){
+        $callback = function () use ($step) {
             $targetsCount = Target::query()
                 ->whereNot('status', Target::PARSED)->count();
 
 
-
             $targets = Target::query()
                 ->whereNot('status', Target::PARSED)
-                ->orderByDesc('id')
                 ->take(10000)
-                ->paginate((int)ceil($targetsCount / 4),page:$step);
-
-
-
+                ->paginate((int)ceil($targetsCount / 4), page: $step);
 
 
             foreach ($targets as $target) {
-                $url = str_replace('.html','',$target->url);
+                $url = str_replace('.html', '', $target->url);
                 try {
                     $res = CrawlerHelper::getHtml($url);
                     $domDocument = new \DOMDocument('1.0', 'UTF-8');
@@ -89,11 +100,10 @@ class Crawler
                         echo "Saved: $url \n";
                         $target->update(['status' => Target::PARSING]);
                         $this->adapter->parseAdvertise($finder, $domDocument, $url);
-                        $target->update(['status' => Target::PARSED]);
                     } else {
                         echo "Deleted: $url \n";
-                        $target->delete();
                     }
+                    $target->update(['status' => Target::PARSED]);
                 } catch (Exception $exception) {
 ////                    $target->update(['status' => Target::NOT_PARSED]);
                     echo "Error: $url \n";

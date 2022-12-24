@@ -53,7 +53,6 @@ class CrawlerHelper
             $page->navigate($url)->waitForNavigation();
             $html = $page->getHtml();
             $page->close();
-            $browser->close();
             return $html;
         }
 

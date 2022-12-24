@@ -3,7 +3,7 @@
         <template v-for="(link, p) in links" :key="p">
             <span v-if="link.url === null"
                   v-html="link.label"/>
-            <Link v-else
+            <Link :preserve-scroll="true" v-else
                   :class="{ 'active': link.active }" :href="link.url"
                   v-html="link.label"/>
         </template>
