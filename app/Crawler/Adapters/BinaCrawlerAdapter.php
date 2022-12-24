@@ -6,6 +6,8 @@ use App\Crawler\Crawler;
 use App\Crawler\CrawlerAdapter;
 use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
+use App\Models\District;
+use App\Models\Settlement;
 use App\Models\Target;
 use Exception;
 use GuzzleHttp\Client;
@@ -36,9 +38,9 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         foreach ($linkNodes as $node) {
             $check = true;
-            try{
+            try {
                 $href = @$node->getElementsByTagName('a')[0]?->getAttribute('href');
-            }catch (Exception $exception){
+            } catch (Exception $exception) {
                 continue;
             }
             if (!$href) {
@@ -82,9 +84,9 @@ class BinaCrawlerAdapter extends CrawlerAdapter
 
         $json = null;
 
-        if(app()->environment('production')){
+        if (app()->environment('production')) {
             $json = $domDocument2->getElementsByTagName('pre')[0]->firstChild->data;
-        }else{
+        } else {
             $json = $phoneApiHtml;
         }
 
@@ -94,12 +96,40 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         $data['username'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'contacts')[0]->firstChild->data);
         $data['name'] = utf8_decode(CrawlerHelper::getClassNodes($finder, 'services-container')[0]->firstChild->data);
         $description = '';
-        foreach ($domDocument->getElementsByTagName('article')[0]->childNodes as $pTag){
-            $description.= ' ' . $pTag->firstChild?->data;
+        foreach ($domDocument->getElementsByTagName('article')[0]->childNodes as $pTag) {
+            $description .= ' ' . $pTag->firstChild?->data;
         }
         $data['description'] = utf8_decode($description);
         $data['images'] = [];
         $thumbnails = CrawlerHelper::getClassNodes($finder, 'thumbnail', false);
+        $locations = CrawlerHelper::getClassNodes($finder, 'param_info');
+
+
+        foreach ($locations[1]->firstChild->childNodes as $li) {
+            $liText = utf8_decode($li->firstChild->firstChild->data);
+
+            if (str_contains($liText, "r.")) {
+                $liText = str_replace("r.", '', $liText);
+                $district = District::where('name', $liText)
+                    ->first('id')?->id;
+                $data['district'] = $district;
+            }
+
+            if (str_contains($liText, "q.")) {
+                $liText = str_replace("q.", '', $liText);
+                $settlement = Settlement::where('name', $liText)
+                    ->first('id')?->id;
+                $data['settlement_id'] = $settlement;
+            }
+
+            if (str_contains($liText, "m.")) {
+                $liText = str_replace("m.", '', $liText);
+                $subway = Settlement::where('name', $liText)
+                    ->first('id')?->id;
+                $data['subway_id'] = $subway;
+            }
+        }
+
         $disk = Storage::disk('digitalocean');
 
         foreach ($thumbnails as $thumbnail) {
@@ -115,7 +145,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             }
         }
 
-        $table = CrawlerHelper::getClassNodes($finder, 'param_info',app()->environment('production'));
+        $table = CrawlerHelper::getClassNodes($finder, 'param_info', app()->environment('production'));
 
         $childNodes = $table[0]->childNodes[0]->childNodes;
         $attributes = [
@@ -159,7 +189,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         }
 
         Advertise::query()
-            ->upsert([$data], ['url']);
+            ->upsert([$data], ['url'],['district','subway_id','settlement_id']);
 
     }
 }
