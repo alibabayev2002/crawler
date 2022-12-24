@@ -2,6 +2,9 @@
 
 namespace App\Crawler;
 
+use App\Models\District;
+use Exception;
+
 class CrawlerHelper
 {
     /**
@@ -57,6 +60,42 @@ class CrawlerHelper
         }
 
         return file_get_contents($url);
+    }
+
+    public static function getDistinctId($long, $lat)
+    {
+        try {
+            $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$lat},{$long}&sensor=false&key=AIzaSyB2Z6PwkrIeQkR5C45Zev71IJbyqOSfT5o";
+
+            $result = json_decode(file_get_contents($url), true);
+
+            if ($result["status"] !== "OK") {
+                return null;
+            }
+
+            $addressComponent = $result['results'][0]['address_components'];
+            foreach ($addressComponent as $address) {
+                if (in_array("sublocality", $address["types"])) {
+                    $districtName = $address['long_name'];
+                    $district = District::query()
+                        ->where('name', $districtName)
+                        ->first();
+
+                    if (!$district) {
+                        $district = District::query()
+                            ->create([
+                                'name' => $districtName
+                            ]);
+                    }
+                    return $district->id;
+                }
+            }
+        } catch (Exception $exception) {
+            return null;
+        }
+
+        return null;
+
     }
 
 }

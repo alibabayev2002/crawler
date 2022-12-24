@@ -16,7 +16,7 @@ class Advertise extends Model
         'additional', 'description', 'phones',
         'longitude', 'latitude', 'identifier',
         'address', 'name', 'images', 'room_count',
-        'username', 'price', 'land'
+        'username', 'price', 'land', 'district'
     ];
 
     protected $casts = [
