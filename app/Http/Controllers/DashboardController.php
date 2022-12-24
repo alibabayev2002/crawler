@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Advertise;
 use App\Models\District;
-use App\Models\Target;
 use App\Models\UserFavorite;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,7 +20,7 @@ class DashboardController extends Controller
             })->when($request->get('district'), function ($query) use ($request) {
                 $query->where('district', $request->get('district'));
             })->when($request->get('category'), function ($query) use ($request) {
-                $query->where('category', $request->get('category'));
+                $query->where('category', 'LIKE', '%' . $request->get('category') . '%');
             })->when($request->get('price_min'), function ($query) use ($request) {
                 $query->where('price', '>=', $request->get('price_min'));
             })->when($request->get('price_max'), function ($query) use ($request) {
@@ -83,6 +82,10 @@ class DashboardController extends Controller
                 $query->whereIn('room_count', $request->get('room_count'));
             })->when($request->get('price_min'), function ($query) use ($request) {
                 $query->where('price', '>=', $request->get('price_min'));
+            })->when($request->get('room_count'), function ($query) use ($request) {
+                $query->whereIn('room_count', $request->get('room_count'));
+            })->when($request->get('district'), function ($query) use ($request) {
+                $query->where('district', $request->get('district'));
             })->when($request->get('price_max'), function ($query) use ($request) {
                 $query->where('price', '<=', $request->get('price_max'));
             })->when($request->get('address'), function ($query) use ($request) {
@@ -103,17 +106,7 @@ class DashboardController extends Controller
             ->latest();
 
         if ($request->get('search')) {
-
             $search = $request->get('search');
-
-            $search .= ' ' . str_replace(['ə'], ['e'], $request->get('search'));
-            $search .= ' ' . str_replace(['ı'], ['i'], $request->get('search'));
-            $search .= ' ' . str_replace(['ş'], ['s'], $request->get('search'));
-            $search .= ' ' . str_replace(['ş'], ['sh'], $request->get('search'));
-            $search .= ' ' . str_replace(['i'], ['ı'], $request->get('search'));
-            $search .= ' ' . str_replace(['s'], ['ş'], $request->get('search'));
-            $search .= ' ' . str_replace(['e'], ['ə'], $request->get('search'));
-
 
             $advertises = $advertises
                 ->selectRaw('advertises.*,MATCH(name,description,address) AGAINST (? IN NATURAL LANGUAGE MODE) AS score', [$search])
