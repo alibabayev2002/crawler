@@ -1,5 +1,6 @@
 <?php
 
+use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -20,13 +21,33 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-Artisan::command('districts',function (){
-    Advertise::query()
-        ->chunk(1000,function ($advertises,$key){
-            echo "Started key: {$key} \n";
-            foreach ($advertises as $advertise){
-                $distinctId = \App\Crawler\CrawlerHelper::getDistinctId($advertise->longitude, $advertise->latitude);
-                dd($distinctId);
-            }
-        });
+Artisan::command('districts', function () {
+
+
+    $array = [
+        34 => 154,
+    ];
+
+    foreach ($array as $key => $item) {
+        Advertise::query()
+            ->where('district',$key)
+            ->update(['district'=>$item]);
+
+
+    }
+
+    \App\Models\District::query()
+        ->whereIn('id',array_keys($array))->delete();
+
+//    Advertise::query()
+//        ->whereNull('district')
+//        ->chunk(1000,function ($advertises,$key){
+//            echo "Started key: {$key} \n";
+//            foreach ($advertises as $advertise){
+//                $distinctId = CrawlerHelper::getDistinctId($advertise->longitude, $advertise->latitude);
+//                $advertise->update([
+//                    'district' => $distinctId
+//                ]);
+//            }
+//        });
 });

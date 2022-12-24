@@ -73,21 +73,24 @@ class CrawlerHelper
                 return null;
             }
 
-            $addressComponent = $result['results'][0]['address_components'];
-            foreach ($addressComponent as $address) {
-                if (in_array("sublocality", $address["types"])) {
-                    $districtName = $address['long_name'];
-                    $district = District::query()
-                        ->where('name', $districtName)
-                        ->first();
 
-                    if (!$district) {
+            foreach ($result['results'] as $result) {
+                $addressComponent = $result['address_components'];
+                foreach ($addressComponent as $address) {
+                    if (in_array("administrative_area_level_2", $address["types"])) {
+                        $districtName = $address['long_name'];
                         $district = District::query()
-                            ->create([
-                                'name' => $districtName
-                            ]);
+                            ->where('name', $districtName)
+                            ->first();
+
+                        if (!$district) {
+                            $district = District::query()
+                                ->create([
+                                    'name' => $districtName
+                                ]);
+                        }
+                        return $district->id;
                     }
-                    return $district->id;
                 }
             }
         } catch (Exception $exception) {

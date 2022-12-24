@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Advertise;
+use App\Models\District;
 use App\Models\Target;
 use App\Models\UserFavorite;
 use Illuminate\Http\Request;
@@ -14,8 +15,13 @@ class DashboardController extends Controller
     {
         $advertises = Advertise::query()
             ->whereNotNull('room_count')
+            ->with('districtTable')
             ->when($request->get('room_count'), function ($query) use ($request) {
                 $query->whereIn('room_count', $request->get('room_count'));
+            })->when($request->get('district'), function ($query) use ($request) {
+                $query->where('district', $request->get('district'));
+            })->when($request->get('category'), function ($query) use ($request) {
+                $query->where('category', $request->get('category'));
             })->when($request->get('price_min'), function ($query) use ($request) {
                 $query->where('price', '>=', $request->get('price_min'));
             })->when($request->get('price_max'), function ($query) use ($request) {
@@ -40,16 +46,8 @@ class DashboardController extends Controller
         if ($request->get('search')) {
             $search = $request->get('search');
 
-            $search .= ' ' . str_replace(['ə'], ['e'], $request->get('search'));
-            $search .= ' ' . str_replace(['ı'], ['i'], $request->get('search'));
-            $search .= ' ' . str_replace(['ş'], ['s'], $request->get('search'));
-            $search .= ' ' . str_replace(['ş'], ['sh'], $request->get('search'));
-            $search .= ' ' . str_replace(['i'], ['ı'], $request->get('search'));
-            $search .= ' ' . str_replace(['s'], ['ş'], $request->get('search'));
-            $search .= ' ' . str_replace(['e'], ['ə'], $request->get('search'));
-
             $advertises = $advertises
-                ->selectRaw('advertises.*,MATCH(name,description,address) AGAINST (? IN NATURAL LANGUAGE MODE) AS score', [$search])
+                ->selectRaw('advertises.*,MATCH(name,description,address) AGAINST (? IN BOOLEAN MODE) AS score', [$search])
                 ->orderByDesc('score')
                 ->having('score', '>', '0');
         }
@@ -61,7 +59,15 @@ class DashboardController extends Controller
 
         $advertises->links = $advertises->onEachSide(1)->appends($request->all())->links();
 
-        return Inertia::render('Dashboard', compact('advertises'));
+        $districts = District::selectRaw('id as value,name as label')->get();
+
+        $categories = Advertise::query()
+            ->selectRaw('DISTINCT(category)')
+            ->pluck('category')->map(function ($item) {
+                return ['label' => mb_strtoupper(substr($item, 0, 1)) . substr($item, 1), 'value' => $item];
+            });
+
+        return Inertia::render('Dashboard', compact('advertises', 'districts', 'categories'));
     }
 
     public function favorites(Request $request)

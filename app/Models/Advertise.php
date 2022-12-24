@@ -19,11 +19,25 @@ class Advertise extends Model
         'username', 'price', 'land', 'district'
     ];
 
+    protected $appends = [
+        'district_name'
+    ];
+
     protected $casts = [
         'additional' => 'array',
         'phones' => 'array',
         'images' => 'array',
     ];
+
+    public function districtTable()
+    {
+        return $this->belongsTo(District::class, 'district');
+    }
+
+    public function getDistrictNameAttribute()
+    {
+        return $this?->districtTable?->name;
+    }
 
     public function getImagesAttribute()
     {

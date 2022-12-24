@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import Multiselect from '@vueform/multiselect'
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
@@ -11,6 +11,12 @@ const value = ref(null);
 
 const props = defineProps({
     advertises: {
+        required: true
+    },
+    districts: {
+        required: true
+    },
+    categories: {
         required: true
     },
     ziggy: {
@@ -31,11 +37,14 @@ const filterForm = useForm({
     area_sot_max: props.ziggy?.query.area_sot_max,
     repair: props.ziggy?.query.repair,
     document_type: props.ziggy?.query.document_type,
+    category: props.ziggy?.query.category,
+    district: props.ziggy?.query.district,
 })
 
 const submitFilterForm = () => {
     filterForm.get(props.ziggy.location);
 }
+
 
 const deleteAdvertise = (id) => {
     if (confirm('Elanı silmək istədiyinizə əminsinizmi ?')) {
@@ -123,7 +132,8 @@ const deleteAdvertise = (id) => {
                         <div class="form-group-wrapper">
                             <label for="repair_1">
 
-                                <input v-model="filterForm.repair" true-value="all" value="all" checked id="repair_1" name="repair"
+                                <input v-model="filterForm.repair" true-value="all" value="all" checked id="repair_1"
+                                       name="repair"
                                        type="radio">
                                 <span>
 Hamısı
@@ -155,7 +165,8 @@ Təmirsiz
                         <div class="form-group-wrapper">
                             <label for="repair_4">
 
-                                <input v-model="filterForm.document_type" true-value="all" value="all" checked id="repair_4"
+                                <input v-model="filterForm.document_type" true-value="all" value="all" checked
+                                       id="repair_4"
                                        name="document" type="radio">
                                 <span>
 Hamısı
@@ -181,6 +192,32 @@ Yox
                         </div>
                     </div>
                 </div>
+
+                <div class="filter-group">
+                    <div class="form-group">
+                        <label for="">
+                            Rayon
+                        </label>
+                        <Multiselect
+                            placeholder="Rayon"
+                            v-model="filterForm.district"
+                            :searchable="true"
+                            :options="districts"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="">
+                            Kateqoriya
+                        </label>
+                        <Multiselect
+                            placeholder="Kateqoriya"
+                            v-model="filterForm.category"
+                            :searchable="true"
+                            :options="categories"
+                        />
+                    </div>
+                </div>
+
             </div>
 
             <table class="table-in-desktop">
