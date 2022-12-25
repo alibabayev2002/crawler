@@ -13,7 +13,6 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $advertises = Advertise::query()
-            ->whereNotNull('room_count')
             ->with('districtTable')
             ->when($request->get('room_count'), function ($query) use ($request) {
                 $query->whereIn('room_count', $request->get('room_count'));
@@ -22,9 +21,9 @@ class DashboardController extends Controller
             })->when($request->get('category'), function ($query) use ($request) {
                 $query->where('category', 'LIKE', '%' . $request->get('category') . '%');
             })->when($request->get('price_min'), function ($query) use ($request) {
-                $query->where('price', '>=', $request->get('price_min'));
+                $query->having('price_int', '>=', $request->get('price_min'));
             })->when($request->get('price_max'), function ($query) use ($request) {
-                $query->where('price', '<=', $request->get('price_max'));
+                $query->having('price_int', '<=', $request->get('price_max'));
             })->when($request->get('address'), function ($query) use ($request) {
                 $query->where('address', 'LIKE', '%' . $request->get('address') . '%');
             })->when($request->get('area_m_min'), function ($query) use ($request) {
@@ -40,13 +39,14 @@ class DashboardController extends Controller
             })->when($request->get('document_type') && $request->get('document_type') != 'all', function ($query) use ($request) {
                 $query->where('document_type', $request->get('document_type'));
             })
+            ->selectRaw('advertises.*,CAST(advertises.price as UNSIGNED) as price_int')
             ->latest();
 
         if ($request->get('search')) {
             $search = $request->get('search');
 
             $advertises = $advertises
-                ->selectRaw('advertises.*,MATCH(name,description,address) AGAINST (? IN BOOLEAN MODE) AS score', [$search])
+                ->selectRaw('MATCH(name,description,address) AGAINST (? IN BOOLEAN MODE) AS score', [$search])
                 ->orderByDesc('score')
                 ->having('score', '>', '0');
         }
@@ -77,7 +77,6 @@ class DashboardController extends Controller
             ->toArray();
 
         $advertises = Advertise::query()
-            ->whereNotNull('room_count')
             ->when($request->get('room_count'), function ($query) use ($request) {
                 $query->whereIn('room_count', $request->get('room_count'));
             })->when($request->get('price_min'), function ($query) use ($request) {

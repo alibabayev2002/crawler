@@ -16,7 +16,7 @@ class Advertise extends Model
         'additional', 'description', 'phones',
         'longitude', 'latitude', 'identifier',
         'address', 'name', 'images', 'room_count',
-        'username', 'price', 'land', 'district'
+        'username', 'price', 'land', 'district','subway_id','settlement_id'
     ];
 
     protected $appends = [

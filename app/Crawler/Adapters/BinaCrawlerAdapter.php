@@ -8,6 +8,7 @@ use App\Crawler\CrawlerHelper;
 use App\Models\Advertise;
 use App\Models\District;
 use App\Models\Settlement;
+use App\Models\Subway;
 use App\Models\Target;
 use Exception;
 use GuzzleHttp\Client;
@@ -119,13 +120,25 @@ class BinaCrawlerAdapter extends CrawlerAdapter
                 $liText = str_replace("q.", '', $liText);
                 $settlement = Settlement::where('name', $liText)
                     ->first('id')?->id;
+
+                if (!$settlement) {
+                    $settlement = Settlement::create([
+                        'name' => trim($liText)
+                    ])->id;
+                }
                 $data['settlement_id'] = $settlement;
             }
 
             if (str_contains($liText, "m.")) {
                 $liText = str_replace("m.", '', $liText);
-                $subway = Settlement::where('name', $liText)
+                $subway = Subway::where('name', $liText)
                     ->first('id')?->id;
+
+                if (!$subway) {
+                    $subway = Subway::create([
+                        'name' => trim($liText)
+                    ])->id;
+                }
                 $data['subway_id'] = $subway;
             }
         }
@@ -173,10 +186,6 @@ class BinaCrawlerAdapter extends CrawlerAdapter
             }
         }
 
-        if (!(isset($data['room_count']) && $data['room_count'])) {
-            return;
-        }
-
         $map = $domDocument->getElementById('item_map');
         $data['longitude'] = $map->getAttribute('data-lng');
         $data['latitude'] = $map->getAttribute('data-lat');
@@ -189,7 +198,7 @@ class BinaCrawlerAdapter extends CrawlerAdapter
         }
 
         Advertise::query()
-            ->upsert([$data], ['url'],['district','subway_id','settlement_id']);
+            ->upsert([$data], ['url'], ['district', 'subway_id', 'settlement_id']);
 
     }
 }
