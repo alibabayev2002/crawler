@@ -48,7 +48,7 @@ table {
         display: none;
 
         @include for-size(mobile) {
-            display: block;
+            display: table;
         }
     }
 

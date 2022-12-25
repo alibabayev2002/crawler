@@ -85,7 +85,7 @@ class Crawler
 
             $targets = Target::query()
                 ->whereNotIn('url', $url)
-                ->paginate((int)ceil($targetsCount / 4), page: $step);
+                ->get();
 
 
             foreach ($targets as $target) {
