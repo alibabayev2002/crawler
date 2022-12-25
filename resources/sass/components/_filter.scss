@@ -2,6 +2,40 @@
 
     margin-top: 20px;
 
+    &-reset {
+        border: 1px solid rgb(52, 73, 94);
+        color: rgb(52, 73, 94);
+        background: #fcfcfb;
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+
+    &-apply {
+        background: rgb(52, 73, 94);
+        color: #ffffff;
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+
+
+    &-forms {
+        max-height: 0;
+        //visibility: hidden;
+        transition: 500ms all;
+        opacity: 0;
+
+        &.active {
+            max-height: 1000px;
+            //visibility: visible;
+            opacity: 1;
+        }
+    }
+
+
     input, .multiselect {
         border-color: rgb(231, 231, 231);
 

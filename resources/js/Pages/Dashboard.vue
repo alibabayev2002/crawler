@@ -1,13 +1,14 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import Multiselect from '@vueform/multiselect'
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 
 const options = ref(['1', '2', '3', '4', '5'])
 const value = ref(null);
+
 
 const props = defineProps({
     advertises: {
@@ -19,13 +20,19 @@ const props = defineProps({
     categories: {
         required: true
     },
+    settlements: {
+        required: true
+    },
+    subways: {
+        required: true
+    },
     ziggy: {
         required: true
     }
 })
 
-
-const filterForm = useForm({
+let filterForm = useForm({
+    filter_show: props.ziggy?.query.filter_show,
     search: props.ziggy?.query.search,
     price_min: props.ziggy?.query.price_min,
     price_max: props.ziggy?.query.price_max,
@@ -39,10 +46,44 @@ const filterForm = useForm({
     document_type: props.ziggy?.query.document_type,
     category: props.ziggy?.query.category,
     district: props.ziggy?.query.district,
+    settlement: props.ziggy?.query.settlement,
+    subway: props.ziggy?.query.subway,
 })
 
 const submitFilterForm = () => {
     filterForm.get(props.ziggy.location);
+}
+
+const filterShow = ref(props.ziggy?.query.filter_show == "true");
+
+const resetFilterForm = () => {
+    filterForm.filter_show = true;
+    filterForm.search = null;
+    filterForm.price_min = null;
+    filterForm.price_max = null;
+    filterForm.address = null;
+    filterForm.room_count = null;
+    filterForm.area_m_min = null;
+    filterForm.area_m_max = null;
+    filterForm.area_sot_min = null;
+    filterForm.area_sot_max = null;
+    filterForm.repair = null;
+    filterForm.document_type = null;
+    filterForm.category = null;
+    filterForm.district = null;
+    filterForm.settlement = null;
+    filterForm.subway = null;
+
+    filterForm.get(props.ziggy.location, {
+        preserveScroll: true,
+        onFinish: () => {
+            filterShow.value = true;
+
+            console.log(filterShow.value);
+        }
+    });
+
+    // submitFilterForm();
 }
 
 
@@ -61,12 +102,12 @@ const deleteAdvertise = (id) => {
         <form class="filter">
             <div class="filter-search">
                 <input v-model="filterForm.search" placeholder="Axtarış..." type="text">
-                <button type="submit" @click.prevent="submitFilterForm">
+                <button type="submit" @click.prevent="filterShow = !filterShow">
                     <img src="/images/filter.png" alt="">
                 </button>
             </div>
 
-            <div class="filter-forms">
+            <div class="filter-forms" :class="{'active':filterShow}">
                 <div class="form-group">
                     <label for="">
                         Otaq sayı
@@ -215,6 +256,45 @@ Yox
                             :searchable="true"
                             :options="categories"
                         />
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="form-group">
+                        <label for="">
+                            Qəsəbə
+                        </label>
+                        <Multiselect
+                            placeholder="Qəsəbə"
+                            v-model="filterForm.settlement"
+                            :searchable="true"
+                            :options="settlements"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="">
+                            Metro
+                        </label>
+                        <Multiselect
+                            placeholder="Metro"
+                            v-model="filterForm.subway"
+                            :searchable="true"
+                            :options="subways"
+                        />
+                    </div>
+                </div>
+
+
+                <div class="filter-group">
+                    <div class="form-group">
+                        <button @click.prevent="resetFilterForm" class="filter-reset">
+                            Sıfırla
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <button @click.prevent="submitFilterForm" class="filter-apply">
+                            Filterlə
+                        </button>
                     </div>
                 </div>
 
