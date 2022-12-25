@@ -85,6 +85,7 @@ class DashboardController extends Controller
             ->toArray();
 
         $advertises = Advertise::query()
+            ->with('districtTable')
             ->when($request->get('room_count'), function ($query) use ($request) {
                 $query->whereIn('room_count', $request->get('room_count'));
             })->when($request->get('price_min'), function ($query) use ($request) {

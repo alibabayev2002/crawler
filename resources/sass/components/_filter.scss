@@ -3,22 +3,24 @@
     margin-top: 20px;
 
     &-reset {
-        border: 1px solid rgb(52, 73, 94);
-        color: rgb(52, 73, 94);
-        background: #fcfcfb;
+        border: 1px solid #4264fd;
+        color: #4264fd;
+        background: #f9fafe;
         width: 100%;
         padding: 10px;
-        border-radius: 10px;
+        border-radius: 5px;
         font-weight: bold;
+        font-size: 12px;
     }
 
     &-apply {
-        background: rgb(52, 73, 94);
+        background: #4264fd;
         color: #ffffff;
         width: 100%;
         padding: 10px;
         border-radius: 10px;
         font-weight: bold;
+        font-size: 12px;
     }
 
 
@@ -28,10 +30,14 @@
         transition: 500ms all;
         opacity: 0;
 
+        z-index: -1;
+        pointer-events: none;
+
         &.active {
             max-height: 1000px;
-            //visibility: visible;
             opacity: 1;
+            z-index: 1;
+            pointer-events: visible;
         }
     }
 

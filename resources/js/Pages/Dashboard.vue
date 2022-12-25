@@ -313,9 +313,6 @@ Yox
                         Qiyməti
                     </th>
                     <th>
-                        Otaq sayı
-                    </th>
-                    <th>
                         Sənəd
                     </th>
                     <th>
@@ -346,9 +343,6 @@ Yox
                     </td>
                     <td>
                         {{ advertise.price }} AZN
-                    </td>
-                    <td>
-                        {{ advertise.room_count }}
                     </td>
                     <td>
                         {{ advertise.document_type }}

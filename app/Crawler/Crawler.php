@@ -78,17 +78,14 @@ class Crawler
             $url = Advertise::pluck('url')
                 ->toArray();
 
+
             $targetsCount = Target::query()
-                ->whereNotIn('url',$url)
-                ->where('status', Target::NOT_PARSED)
+                ->whereNotIn('url', $url)
                 ->count();
 
-
             $targets = Target::query()
-                ->take(10000)
-                ->whereNotIn('url',$url)
-                ->where('status', Target::NOT_PARSED)
-                ->get();
+                ->whereNotIn('url', $url)
+                ->paginate((int)ceil($targetsCount / 4), page: $step);
 
 
             foreach ($targets as $target) {
