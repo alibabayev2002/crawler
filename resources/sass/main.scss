@@ -37,21 +37,6 @@ table {
     width: 100%;
     border-collapse: collapse;
 
-    &.table-in-desktop {
-
-        @include for-size(mobile) {
-            display: none;
-        }
-    }
-
-    &.table-in-mobile {
-        display: none;
-
-        @include for-size(mobile) {
-            display: table;
-        }
-    }
-
 
     thead {
         background: rgb(249, 250, 251);

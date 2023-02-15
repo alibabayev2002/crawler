@@ -28,6 +28,9 @@ const props = defineProps({
     },
     ziggy: {
         required: true
+    },
+    notParsedCount : {
+        required: true
     }
 })
 
@@ -96,7 +99,7 @@ const deleteAdvertise = (id) => {
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppLayout :title="'Dashboard ' + notParsedCount">
         <h1>{{ advertises.total }} əmlak tapıldı</h1>
 
         <form class="filter">

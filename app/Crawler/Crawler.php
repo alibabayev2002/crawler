@@ -2,7 +2,6 @@
 
 namespace App\Crawler;
 
-use App\Models\Advertise;
 use App\Models\Target;
 use Exception;
 use HeadlessChromium\BrowserFactory;
@@ -30,12 +29,15 @@ class Crawler
     {
         $callback = function () use ($url, $progressBar) {
             $domDocument = new \DOMDocument('1.0', 'UTF-8');
-            $domDocument->loadHTML(CrawlerHelper::getHtml($url));
+            $html = CrawlerHelper::getHtml($url);
+            $domDocument->loadHTML($html);
             $finder = new \DomXPath($domDocument);
 
             $currentPage = CrawlerHelper::getPage($url);
             $maxPage = $this->adapter->getMaxPageCount($finder);
-            $progressBar->start($maxPage);
+            $progressBar->start($maxPage - $currentPage);
+
+            $links = [];
             while ($currentPage < $maxPage) {
                 $nextPageUrl = CrawlerHelper::getUrl($url, $currentPage++);
                 $res = CrawlerHelper::getHtml($nextPageUrl);
@@ -44,6 +46,10 @@ class Crawler
                 $finder = new \DomXPath($domDocument);
                 $this->adapter->parseLinks($finder);
                 $progressBar->advance();
+            }
+            if (count($links) > 0) {
+                Target::query()
+                    ->upsert($links, ['url']);
             }
         };
 
@@ -75,16 +81,13 @@ class Crawler
     {
         $callback = function () use ($step) {
 
-            $url = Advertise::pluck('url')
-                ->toArray();
-
-
             $targetsCount = Target::query()
-                ->whereNotIn('url', $url)
+                ->where('status', Target::NOT_PARSED)
                 ->count();
 
+
             $targets = Target::query()
-                ->whereNotIn('url', $url)
+                ->where('status', Target::NOT_PARSED)
                 ->get();
 
 
@@ -104,13 +107,16 @@ class Crawler
                     } else {
                         echo "Deleted: $url \n";
                     }
+
+
                     $target->update(['status' => Target::PARSED]);
                 } catch (Exception $exception) {
-//                    dd($exception->getMessage(),$exception->getLine());
-////                    $target->update(['status' => Target::NOT_PARSED]);
+//                    $target->update(['status' => Target::NOT_PARSED]);
                     echo "Error: $url \n";
                 }
             }
+
+
         };
         $this->fixInternalErrors($callback);
     }
