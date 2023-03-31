@@ -21,33 +21,23 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-Artisan::command('districts', function () {
-
-
-    $array = [
-        34 => 154,
-    ];
-
-    foreach ($array as $key => $item) {
-        Advertise::query()
-            ->where('district',$key)
-            ->update(['district'=>$item]);
-
+Artisan::command('phones', function () {
+    $advertises = Advertise::query()->whereNotNull('phones')->select('phones', 'username')->get();
+    $path = public_path('phones.csv');
+    $fp = fopen($path, 'w');
+    foreach ($advertises as $advertise) {
+        $phones = $advertise->phones;
+        $nameString = $advertise->username;
+        $nameArray = explode(' ', $nameString);
+        $name = $nameArray[0];
+        $surname = $nameArray[1] ?? null;
+        foreach ($phones as $phone) {
+            $phone = preg_replace('@[\D]@', '', $phone);
+            $phone = preg_replace('@^0@', '994', $phone);
+            $row = $surname ? [$phone,$name,$surname] : [$phone,$name];
+            fputcsv($fp, $row);
+        }
 
     }
-
-    \App\Models\District::query()
-        ->whereIn('id',array_keys($array))->delete();
-
-//    Advertise::query()
-//        ->whereNull('district')
-//        ->chunk(1000,function ($advertises,$key){
-//            echo "Started key: {$key} \n";
-//            foreach ($advertises as $advertise){
-//                $distinctId = CrawlerHelper::getDistinctId($advertise->longitude, $advertise->latitude);
-//                $advertise->update([
-//                    'district' => $distinctId
-//                ]);
-//            }
-//        });
-});
+    fclose($fp);
+})->purpose('Display an inspiring quote');

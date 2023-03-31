@@ -52,6 +52,7 @@ class CrawlerHelper
     {
         if (app()->environment('production')) {
             $browser = Crawler::getBrowser();
+            dd($browser);
             $page = $browser->createPage();
             $page->navigate($url)->waitForNavigation();
             $html = $page->getHtml();

@@ -66,7 +66,7 @@ class DashboardController extends Controller
     {
 
         $notParsedCount = Target::query()
-            ->whereNot('status',Target::PARSED)
+            ->where('status',Target::NOT_PARSED)
             ->count();
         $advertises = $this->getAdvertises($request)->paginate(10);
         $advertises->links = $advertises->onEachSide(1)->appends($request->all())->links();
